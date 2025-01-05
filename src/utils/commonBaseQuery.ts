@@ -15,3 +15,13 @@ export const commonBaseQuery = () => {
         },
     });
 };
+
+
+export const getErrorMessage = (error: unknown): string => {
+    if (typeof error === "object" && error !== null && "data" in error) {
+        const apiError = error.data as ApiErrorResponse<string>;
+
+        return apiError.serviceMessage || "Something went wrong";
+    }
+    return "Something went wrong";
+};
