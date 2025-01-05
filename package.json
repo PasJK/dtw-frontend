@@ -1,0 +1,52 @@
+{
+  "name": "dtw-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "rimraf .next && next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.tsx\" \"test/**/*.ts\" \"test/**/*.tsx\"",
+    "prepare": "husky",
+    "unused-exports": "ts-unused-exports tsconfig.json"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.1.6",
+    "@mui/material": "^6.1.6",
+    "@mui/x-data-grid": "^7.23.1",
+    "@mui/x-date-pickers": "^7.6.2",
+    "@next/third-parties": "^14.2.13",
+    "@reduxjs/toolkit": "^2.2.5",
+    "dayjs": "^1.11.11",
+    "echarts": "^5.5.1",
+    "html-react-parser": "^5.1.18",
+    "jwt-decode": "^4.0.0",
+    "mui-chips-input": "^4.0.1",
+    "mui-daterange-picker": "^1.0.5",
+    "next": "^14.2.3",
+    "notistack": "^3.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-dropzone": "^14.2.3",
+    "react-redux": "^9.1.2",
+    "redux-persist": "^6.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.3.0",
+    "@types/node": "^20",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.13",
+    "husky": "^9.1.6",
+    "postcss": "^8",
+    "rimraf": "^5.0.7",
+    "tailwindcss": "^3.4.1",
+    "ts-unused-exports": "^11.0.1",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.9.0"
+  }
+}
