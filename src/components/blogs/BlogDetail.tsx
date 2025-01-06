@@ -46,7 +46,6 @@ export const BlogDetail = ({ postId, handleBack }: BlogDetailProps): React.JSX.E
     const [createComment] = useCreateCommentMutation();
     const [responseError, setResponseError] = useState<string | null>(null);
     const [openAddCommentDialog, setOpenAddCommentDialog] = useState<boolean>(false);
-    // const [openCommentFormMobile, setOpenCommentFormMobile] = useState<boolean>(false);
     const [comment, setComment] = useState<string>("");
     const { data, isLoading } = useGetPostByIdQuery(postId, { skip: !postId });
     const { data: commentResponse, isLoading: isLoadingComments } = useGetPostCommentsQuery(

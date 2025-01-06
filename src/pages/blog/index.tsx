@@ -8,11 +8,24 @@ import {
     Typography,
     useMediaQuery,
     useTheme,
+    Modal,
+    Snackbar,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { GetAllPostsParams, GetPostsResponse, useGetAllPostsQuery } from "@/services/post";
+import { useRouter } from "next/router";
+import {
+    GetAllPostsParams,
+    GetPostsResponse,
+    useCreatePostMutation,
+    useGetAllPostsQuery,
+    useGetCommunityListQuery,
+} from "@/services/post";
 import BlogList from "@/components/blogs/BlogList";
 import { BlogDetail } from "@/components/blogs/BlogDetail";
+import PostsForm, { PostsFormInput, ValidatePostsForm } from "@/components/PostsForm";
+import { getErrorMessage } from "@/utils/commonBaseQuery";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import LoginRequired from "@/components/LoginRequired";
 
 const defaultCondition: GetAllPostsParams = {
     page: 1,
@@ -26,29 +39,35 @@ const defaultCondition: GetAllPostsParams = {
 type ViewState = "list" | "detail";
 
 export default function BlogPage() {
+    const router = useRouter();
+    const { isLoggedIn } = useCurrentUser();
     const [condition, setCondition] = useState<GetAllPostsParams>(defaultCondition);
     const { data: postDataList } = useGetAllPostsQuery(condition);
     const meta = postDataList?.meta;
-    const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+    const [isSearchExpanded, setIsSearchExpanded] = useState<boolean>(false);
     const [postList, setPostList] = useState<GetPostsResponse[]>([]);
+    const { data: communityList } = useGetCommunityListQuery();
+    const [createPost] = useCreatePostMutation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const [viewState, setViewState] = useState<ViewState>("list");
+    const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState<boolean>(false);
+    const [openAddCommentDialog, setOpenAddCommentDialog] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>("");
+    const [formInput, setFormInput] = useState<PostsFormInput>({
+        community: "",
+        title: "",
+        contents: "",
+    });
+    const [inputError, setInputError] = useState<ValidatePostsForm>({
+        community: false,
+        title: false,
+        contents: false,
+    });
     const [postSelectedId, setPostSelectedId] = useState<string | null>(null);
     const handleCommunityChange = (community: string) => {
         setCondition({ ...condition, community: community !== "all" ? community : undefined });
     };
-
-    const dropdownOptions = [
-        { label: "Community", value: "all" },
-        { label: "History", value: "history" },
-        { label: "Food", value: "food" },
-        { label: "Pets", value: "pets" },
-        { label: "Health", value: "health" },
-        { label: "Fashion", value: "fashion" },
-        { label: "Exercise", value: "exercise" },
-        { label: "Others", value: "others" },
-    ];
 
     const handleChangePage = (event: React.ChangeEvent<unknown>, newPage: number) => {
         setCondition({ ...condition, page: newPage });
@@ -72,22 +91,53 @@ export default function BlogPage() {
         }
     };
 
+    const handleCreatePostModal = () => {
+        if (!isLoggedIn) {
+            setOpenAddCommentDialog(true);
+            return;
+        }
+
+        setIsCreatePostModalOpen(true);
+    };
+
     const handlePostClick = (id: string) => {
         setViewState("detail");
         setPostSelectedId(id);
         setCondition({ ...condition, search: "" });
     };
+    const validateInput = (input: PostsFormInput): ValidatePostsForm => {
+        const errors: ValidatePostsForm = {
+            community: !input.community,
+            title: !input.title,
+            contents: !input.contents,
+        };
 
-    useEffect(() => {
-        if (typeof window !== "undefined" && window.localStorage) {
-            const lastActive = localStorage.getItem("lasted_active");
-            if (lastActive) {
-                setPostSelectedId(lastActive);
-                setViewState("detail");
-                localStorage.removeItem("lasted_active");
+        setInputError(errors);
+        return errors;
+    };
+
+    const handleCreatePost = async () => {
+        const errors = validateInput(formInput);
+        const hasErrors = Object.values(errors).some(error => error);
+
+        if (!hasErrors) {
+            try {
+                await createPost(formInput).unwrap();
+                setIsCreatePostModalOpen(false);
+                setFormInput({
+                    community: "",
+                    title: "",
+                    contents: "",
+                });
+            } catch (error) {
+                setErrorMessage(getErrorMessage(error));
             }
         }
-    }, []);
+    };
+
+    const handleGoToLogin = () => {
+        router.push("/login");
+    };
 
     useEffect(() => {
         if (!postDataList) return;
@@ -97,6 +147,12 @@ export default function BlogPage() {
 
     return (
         <div className={` sm:w-full mx-auto ${viewState === "detail" ? "h-screen w-full" : "w-11/12 p-4"}`}>
+            <Snackbar
+                open={!!errorMessage}
+                message={errorMessage}
+                onClose={() => setErrorMessage("")}
+                autoHideDuration={6000}
+            />
             {viewState === "list" ? (
                 <>
                     <div className="flex flex-row gap-2 md:items-center md:gap-6 mb-6 w-10/12 xs:w-full sm:w-full">
@@ -129,21 +185,21 @@ export default function BlogPage() {
                             <TextField
                                 select
                                 size="small"
-                                defaultValue="all"
+                                value={condition.community || "all"}
+                                onChange={e => handleCommunityChange(e.target.value)}
                                 className="xs:max-w-full xs:flex-grow md:flex-grow-0"
                             >
-                                {dropdownOptions.map(option => (
+                                {communityList?.map(option => (
                                     <MenuItem
-                                        key={option.value}
-                                        value={option.value}
+                                        key={option.key}
+                                        value={option.key}
                                         className={`hover:bg-[#D8E9E4] focus:bg-[#D8E9E4] ${
-                                            condition.community === option.value ? "bg-[#D8E9E4]" : ""
+                                            condition.community === option.key ? "bg-[#D8E9E4]" : ""
                                         }`}
-                                        onClick={() => handleCommunityChange(option.value)}
                                     >
-                                        <span className="flex justify-between items-center" key={option.value}>
-                                            {option.label}
-                                            {condition.community === option.value && <span className="ml-2">✓</span>}
+                                        <span className="flex justify-between w-full items-center">
+                                            {option.name}
+                                            {condition.community === option.key && <span className="ml-2">✓</span>}
                                         </span>
                                     </MenuItem>
                                 ))}
@@ -151,6 +207,7 @@ export default function BlogPage() {
                             <Button
                                 variant="contained"
                                 className="bg-[#49A569] hover:bg-[#3d8a57] text-white normal-case flex items-center gap-2 whitespace-nowrap"
+                                onClick={handleCreatePostModal}
                             >
                                 <span>Create</span>
                                 <span className="text-xs">+</span>
@@ -162,6 +219,27 @@ export default function BlogPage() {
             ) : (
                 postSelectedId && <BlogDetail postId={postSelectedId} handleBack={() => setViewState("list")} />
             )}
+
+            <Modal
+                open={openAddCommentDialog}
+                onClose={() => setOpenAddCommentDialog(false)}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
+            >
+                <LoginRequired handleGoToLogin={handleGoToLogin} handleClose={() => setOpenAddCommentDialog(false)} />
+            </Modal>
+
+            <Modal open={isCreatePostModalOpen} onClose={() => setIsCreatePostModalOpen(false)}>
+                <PostsForm
+                    handleCancelPost={() => setIsCreatePostModalOpen(false)}
+                    handleSubmitPost={handleCreatePost}
+                    onSelectCommunity={community => setFormInput({ ...formInput, community })}
+                    onTitleChange={inputTitle => setFormInput({ ...formInput, title: inputTitle })}
+                    onContentsChange={inputContents => setFormInput({ ...formInput, contents: inputContents })}
+                    inputError={inputError}
+                    isMobile={isMobile}
+                />
+            </Modal>
 
             {viewState === "list" && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white">

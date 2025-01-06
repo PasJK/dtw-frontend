@@ -973,3 +973,7 @@ body {
     background-color: #d8e9e4;
     border-radius: 4px;
 }
+
+textarea {
+    resize: none;
+}

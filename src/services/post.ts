@@ -38,11 +38,30 @@ export type CreateCommentParams = {
     message: string;
 };
 
+export type GetCommunityListResponse = {
+    name: string;
+    key: string;
+};
+
+export type CreatePostParams = {
+    community: string;
+    title: string;
+    contents: string;
+};
+
 export const postService = createApi({
     reducerPath: "postService",
     baseQuery: commonBaseQuery(),
     tagTypes: ["POSTS"],
     endpoints: builder => ({
+        createPost: builder.mutation<ServiceResponse<GetPostsResponse>, CreatePostParams>({
+            query: ({ community, title, contents }) => ({
+                url: "/posts",
+                method: "POST",
+                body: { community, title, contents },
+            }),
+            invalidatesTags: () => [{ type: "POSTS", id: "CREATE_POST" }],
+        }),
         getAllPosts: builder.query<ServiceResponseWithMeta<GetPostsResponse[]>, GetAllPostsParams>({
             query: ({ page, perPage, orderBy, order, search, community }) => {
                 const queryParams = new URLSearchParams();
@@ -67,6 +86,10 @@ export const postService = createApi({
                 data: response.data,
                 meta: response.meta,
             }),
+            providesTags: [
+                { type: "POSTS", id: "CREATE_COMMENT" },
+                { type: "POSTS", id: "GET_COMMENTS" },
+            ],
         }),
         getPostById: builder.query<GetPostsResponse, string>({
             query: id => ({
@@ -74,7 +97,10 @@ export const postService = createApi({
                 method: "GET",
             }),
             transformResponse: (response: ServiceResponse<GetPostsResponse>) => response.data,
-            providesTags: (result, error, id) => [{ type: "POSTS", id }],
+            providesTags: [
+                { type: "POSTS", id: "CREATE_COMMENT" },
+                { type: "POSTS", id: "GET_COMMENTS" },
+            ],
         }),
         getPostComments: builder.query<
             ServiceResponseWithMeta<GetPostCommentsResponse[]>,
@@ -94,7 +120,10 @@ export const postService = createApi({
                 data: response.data,
                 meta: response.meta,
             }),
-            providesTags: (result, error, { id }) => [{ type: "POSTS", id }],
+            providesTags: [
+                { type: "POSTS", id: "CREATE_COMMENT" },
+                { type: "POSTS", id: "GET_COMMENTS" },
+            ],
         }),
         createComment: builder.mutation<ServiceResponse<GetPostCommentsResponse>, CreateCommentParams>({
             query: ({ postId, message }) => ({
@@ -102,10 +131,23 @@ export const postService = createApi({
                 method: "POST",
                 body: { message },
             }),
-            invalidatesTags: (result, error, { postId }) => [{ type: "POSTS", id: postId }],
+            invalidatesTags: () => [{ type: "POSTS", id: "CREATE_COMMENT" }],
+        }),
+        getCommunityList: builder.query<GetCommunityListResponse[], void>({
+            query: () => ({
+                url: "/posts/communities/dropdown",
+                method: "GET",
+            }),
+            transformResponse: (response: ServiceResponse<GetCommunityListResponse[]>) => response.data,
         }),
     }),
 });
 
-export const { useGetAllPostsQuery, useGetPostByIdQuery, useGetPostCommentsQuery, useCreateCommentMutation } =
-    postService;
+export const {
+    useGetAllPostsQuery,
+    useGetPostByIdQuery,
+    useGetPostCommentsQuery,
+    useCreateCommentMutation,
+    useGetCommunityListQuery,
+    useCreatePostMutation,
+} = postService;
