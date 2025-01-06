@@ -61,11 +61,11 @@ export default function BlogPage() {
     };
 
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const text = event.target.value;
+        const text = event.target.value.trim();
 
-        if (text.length < 3) return;
-
-        setCondition({ ...condition, search: text.trim() });
+        if (text.length === 0 || text.length >= 3) {
+            setCondition({ ...condition, search: text });
+        }
     };
 
     useEffect(() => {
@@ -118,7 +118,7 @@ export default function BlogPage() {
                                 }`}
                                 onClick={() => handleCommunityChange(option.value)}
                             >
-                                <span className="flex justify-between items-center">
+                                <span className="flex justify-between items-center" key={option.value}>
                                     {option.label}
                                     {condition.community === option.value && <span className="ml-2">✓</span>}
                                 </span>
@@ -135,25 +135,24 @@ export default function BlogPage() {
                 </div>
             </div>
 
-            <div>
-                {postList.length > 0 ? (
-                    postList.map((post, index) => (
-                        <Blog
-                            id={post.id}
-                            author={post.author}
-                            community={post.community}
-                            title={post.title}
-                            contents={post.contents}
-                            totalComments={post.totalComments}
-                            isFirst={index === 0}
-                        />
-                    ))
-                ) : (
-                    <div className="flex justify-center">
-                        <Typography variant="h5">NOT FOUND</Typography>
-                    </div>
-                )}
-            </div>
+            {postList.length > 0 ? (
+                postList.map((post, index) => (
+                    <Blog
+                        key={post.id}
+                        author={post.author}
+                        community={post.community}
+                        title={post.title}
+                        contents={post.contents}
+                        totalComments={post.totalComments}
+                        isFirst={index === 0}
+                        searchValue={condition.search || ""}
+                    />
+                ))
+            ) : (
+                <div className="flex justify-center">
+                    <Typography variant="h5">NOT FOUND</Typography>
+                </div>
+            )}
 
             <div className="fixed bottom-0 left-0 right-0 bg-white">
                 <div className="w-10/12 md:w-8/12 mx-auto flex flex-col md:flex-row justify-center items-center gap-2 md:gap-4 py-4 border-t px-4 md:px-0">
