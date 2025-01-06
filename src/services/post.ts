@@ -1,14 +1,15 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { commonBaseQuery } from "@/utils/commonBaseQuery";
-import { ServiceResponseWithMeta } from "./types/serviceResponseType";
+import { ServiceResponse, ServiceResponseWithMeta } from "./types/serviceResponseType";
 
-export type GetAllPostsResponse = {
+export type GetPostsResponse = {
     id: string;
     title: string;
     contents: string;
     author: string;
     community: string;
     totalComments: number;
+    createdAt: string;
 };
 
 export type GetAllPostsParams = {
@@ -18,6 +19,18 @@ export type GetAllPostsParams = {
     order?: string;
     search?: string;
     community?: string;
+};
+
+export type GetPostCommentsParams = {
+    page?: number;
+    perPage?: number;
+};
+
+export type GetPostCommentsResponse = {
+    id: string;
+    message: string;
+    author: string;
+    createdAt: string;
 };
 
 export const getAuthToken = () => {
@@ -39,7 +52,7 @@ export const postService = createApi({
     baseQuery: commonBaseQuery(),
     tagTypes: ["POSTS"],
     endpoints: builder => ({
-        getAllPosts: builder.query<ServiceResponseWithMeta<GetAllPostsResponse[]>, GetAllPostsParams>({
+        getAllPosts: builder.query<ServiceResponseWithMeta<GetPostsResponse[]>, GetAllPostsParams>({
             query: ({ page, perPage, orderBy, order, search, community }) => {
                 const queryParams = new URLSearchParams();
                 if (page) queryParams.set("page", page.toString());
@@ -59,7 +72,33 @@ export const postService = createApi({
                     method: "GET",
                 };
             },
-            transformResponse: (response: ServiceResponseWithMeta<GetAllPostsResponse[]>) => ({
+            transformResponse: (response: ServiceResponseWithMeta<GetPostsResponse[]>) => ({
+                data: response.data,
+                meta: response.meta,
+            }),
+        }),
+        getPostById: builder.query<GetPostsResponse, string>({
+            query: id => ({
+                url: `/posts/${id}`,
+                method: "GET",
+            }),
+            transformResponse: (response: ServiceResponse<GetPostsResponse>) => response.data,
+        }),
+        getPostComments: builder.query<
+            ServiceResponseWithMeta<GetPostCommentsResponse[]>,
+            { id: string; params: GetPostCommentsParams }
+        >({
+            query: ({ id, params }) => {
+                const queryParams = new URLSearchParams();
+                if (params.page) queryParams.set("page", params.page.toString());
+                if (params.perPage) queryParams.set("perPage", params.perPage.toString());
+
+                return {
+                    url: `/posts/${id}/comments?${queryParams.toString()}`,
+                    method: "GET",
+                };
+            },
+            transformResponse: (response: ServiceResponseWithMeta<GetPostCommentsResponse[]>) => ({
                 data: response.data,
                 meta: response.meta,
             }),
@@ -67,4 +106,4 @@ export const postService = createApi({
     }),
 });
 
-export const { useGetAllPostsQuery } = postService;
+export const { useGetAllPostsQuery, useGetPostByIdQuery, useGetPostCommentsQuery } = postService;
