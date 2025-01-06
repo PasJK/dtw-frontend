@@ -59,7 +59,7 @@ export const BlogPost = ({
             </div>
             <Chip label={community} className="mb-2" />
             <span
-                className={`flex items-center text-xl font-semibold mb-2 ${fullContent ? "cursor-default" : "cursor-pointer hover:underline hover:text-[#C5A365]"} `}
+                className={`flex items-center text-xl font-semibold mb-2 ${fullContent ? "cursor-default" : "cursor-pointer hover:underline hover:text-gold"} `}
                 onClick={!fullContent ? onClick : undefined}
                 onKeyDown={!fullContent ? onClick : undefined}
             >
@@ -67,7 +67,7 @@ export const BlogPost = ({
             </span>
             <p className={`text-gray-700 mb-6 ${fullContent ? "" : "line-clamp-3"}`}>{contents}</p>
             <div
-                className={`flex items-center text-[#939494] text-sm space-x-2 ${fullContent ? "cursor-default" : "cursor-pointer hover:text-[#C5A365]"}`}
+                className={`flex items-center text-[#939494] text-sm space-x-2 ${fullContent ? "cursor-default" : "cursor-pointer hover:text-gold"}`}
                 onClick={!fullContent ? onClick : undefined}
                 onKeyDown={!fullContent ? onClick : undefined}
             >
