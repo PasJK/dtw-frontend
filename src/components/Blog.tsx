@@ -1,27 +1,43 @@
 import React from "react";
+import { Chip } from "@mui/material";
 import AvatarName from "./AvatarName";
 
 type BlogProps = {
-    key: string;
-    author: string;
-    category: string;
+    id: string;
     title: string;
-    excerpt: string;
-    commentCount: number;
+    community: string;
+    author: string;
+    contents: string;
+    totalComments: number;
+    isFirst: boolean;
 };
 
-export const Blog = ({ key, author, category, title, excerpt, commentCount }: BlogProps): React.JSX.Element => {
+export const Blog = ({
+    id,
+    author,
+    community,
+    title,
+    contents,
+    totalComments,
+    isFirst,
+}: BlogProps): React.JSX.Element => {
     return (
-        <div key={key} className="border-b pb-6">
+        <div
+            key={id}
+            className={`w-10/12 sm:w-full xs:w-full border-0 first:rounded-t-xl border-[#BBC2C0] p-4 bg-white mb-0.5 ${
+                isFirst ? "rounded-t-xl" : ""
+            }`}
+        >
             <div className="flex items-center gap-3 mb-3">
                 <AvatarName name={author || ""} />
                 <span>{author}</span>
             </div>
-            <div className="text-sm text-gray-600 mb-2">{category}</div>
+            <Chip label={community} className="mb-2" />
             <h2 className="text-xl font-semibold mb-2">{title}</h2>
-            <p className="text-gray-700 mb-3">{excerpt}</p>
-            <div className="flex items-center text-gray-500 text-sm">
-                <span>{commentCount} Comments</span>
+            <p className="text-gray-700 mb-3 line-clamp-3">{contents}</p>
+            <div className="flex items-center text-[#939494] text-sm space-x-2">
+                <span className="material-symbols-outlined">sms</span>
+                <span>{totalComments} Comments</span>
             </div>
         </div>
     );

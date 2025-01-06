@@ -49,12 +49,6 @@ const config: Config = {
                 scoreCard: "120px",
             },
             colors: {
-                disabled: palette.action.disabled,
-                success: palette.success.main,
-                successbg: palette.success.bg,
-                warn: palette.warning.main,
-                warnbg: palette.warning.bg,
-                error: palette.error.main,
                 black: palette.black.main,
                 secondary: palette.secondary.main,
                 primary: palette.primary.main,
@@ -73,7 +67,7 @@ const config: Config = {
                 "highlight-black-sea": "#182453",
                 "carousel-video-gradient-blue-top": "#3F7EF2",
                 "carousel-video-gradient-blue-bottom": "#24498C",
-                "optional": "#7A8C96",
+                optional: "#7A8C96",
             },
             borderRadius: {
                 "4xl": "2rem",

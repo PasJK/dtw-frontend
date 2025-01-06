@@ -20,7 +20,6 @@ const AppLayout = ({
     mainClass: string;
     component: React.JSX.Element;
 }) => {
-    console.log("pageObj", pageObj);
     return (
         <div className={mainClass}>{pageObj?.layout === "home" ? <HomeLayout>{component}</HomeLayout> : component}</div>
     );
