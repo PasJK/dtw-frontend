@@ -1,5 +1,5 @@
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import { Box, Typography, Button, Menu, MenuItem, Snackbar, useMediaQuery, useTheme } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { MAIN_MENU } from "@/configs/route";
@@ -9,12 +9,12 @@ import { useLogoutMutation } from "@/services/auth";
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
     const { user, isLoggedIn } = useCurrentUser();
-    const [responseError, setResponseError] = React.useState<string | null>(null);
+    const [responseError, setResponseError] = useState<string | null>(null);
     const [logout] = useLogoutMutation();
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-    const [isSidebarOpen, setIsSidebarOpen] = React.useState(!isMobile);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const handleMenuClick = (event: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>) => {
         setAnchorEl(event.currentTarget);
@@ -22,6 +22,12 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
 
     const handleCloseMenu = () => {
         setAnchorEl(null);
+    };
+
+    const handleMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === "Enter") {
+            handleMenuClick(event);
+        }
     };
 
     const handleLogout = async () => {
@@ -37,15 +43,9 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
         setIsSidebarOpen(!isSidebarOpen);
     };
 
-    const handleMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === "Enter") {
-            handleMenuClick(event);
-        }
-    };
-
     const renderTopNav = () => {
         return (
-            <Box className="h-14 bg-[#2A3B2D] px-6 flex items-center justify-between">
+            <Box className="h-16 bg-[#2A3B2D] px-6 flex items-center justify-between p-4">
                 <Snackbar
                     open={!!responseError}
                     onClose={() => setResponseError(null)}
@@ -84,7 +84,15 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
                             </Button>
                         </Link>
                     )}
-                    {isMobile && <MenuIcon className="text-white cursor-pointer" onClick={toggleSidebar} />}
+                    {isMobile && (
+                        <MenuIcon
+                            className="text-white cursor-pointer"
+                            onClick={toggleSidebar}
+                            tabIndex={0}
+                            role="button"
+                            aria-haspopup="true"
+                        />
+                    )}
                 </div>
             </Box>
         );
@@ -95,7 +103,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
 
         return (
             <Box
-                className={`${isMobile ? "fixed top-0 right-0 z-50 h-full w-3/4 bg-[#243831] text-[#BBC2C0]" : "w-64 bg-[#BBC2C0] text-[#243831]"}  p-6`}
+                className={`${isMobile ? "fixed top-0 right-0 z-50 h-full w-3/4 bg-[#243831] text-[#BBC2C0]" : "w-1/6 bg-[#BBC2C0] text-[#243831]"}  p-4`}
             >
                 <div className="flex flex-col gap-6">
                     {isMobile && (
@@ -103,9 +111,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
                             className="material-symbols-outlined text-2xl cursor-pointer"
                             onClick={toggleSidebar}
                             onMouseEnter={toggleSidebar}
-                            onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) =>
-                                e.key === "Enter" && toggleSidebar(e.currentTarget)
-                            }
+                            onKeyDown={handleMenuKeyDown}
                             tabIndex={0}
                             role="button"
                             aria-haspopup="true"
@@ -128,13 +134,13 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
     };
 
     const renderMainContent = () => {
-        return <div className="flex flex-1 flex-col p-4">{children}</div>;
+        return <div className="flex flex-1 flex-col px-2">{children}</div>;
     };
 
     return (
-        <Box className="flex flex-col min-h-screen">
+        <Box className="flex flex-col h-screen bg-[#BBC2C0]">
             {renderTopNav()}
-            <Box className="flex flex-row flex-1">
+            <Box className="flex flex-row flex-1 overflow-x-hidden mb-16 xs:mb-28">
                 {renderLeftSidebar()}
                 {renderMainContent()}
             </Box>

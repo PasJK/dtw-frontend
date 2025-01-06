@@ -955,3 +955,21 @@ body {
 .MuiCheckbox-root.Mui-checked.Mui-disabled {
     color: #e3e7ea !important;
 }
+
+/* Custom text input border */
+.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+    border-color: white;
+}
+
+.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: white;
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: white;
+}
+
+.MuiOutlinedInput-root:hover .MuiSelect-select {
+    background-color: #d8e9e4;
+    border-radius: 4px;
+}
