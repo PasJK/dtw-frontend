@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { TextField, Button } from "@mui/material";
+import { TextField, Button, CircularProgress } from "@mui/material";
 import { useRouter } from "next/router";
 import Validator from "@/utils/validator";
 import { useLoginMutation } from "@/services/auth";
@@ -45,7 +45,7 @@ export default function Login() {
         }
     }, [isLoggedIn]);
 
-    return (
+    return !isLoggedIn ? (
         <div className="min-h-screen bg-[#1e3a2d] flex flex-col lg:flex-row ">
             <div className="w-full lg:w-1/2 flex flex-col lg:flex-row items-center justify-center">
                 <div className="w-full">
@@ -100,6 +100,10 @@ export default function Login() {
                     <p className="text-white italic text-xl">a Board</p>
                 </div>
             </div>
+        </div>
+    ) : (
+        <div className="flex justify-center items-center h-screen">
+            <CircularProgress />
         </div>
     );
 }

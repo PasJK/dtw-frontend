@@ -79,6 +79,17 @@ export default function BlogPage() {
     };
 
     useEffect(() => {
+        if (typeof window !== "undefined" && window.localStorage) {
+            const lastActive = localStorage.getItem("lasted_active");
+            if (lastActive) {
+                setPostSelectedId(lastActive);
+                setViewState("detail");
+                localStorage.removeItem("lasted_active");
+            }
+        }
+    }, []);
+
+    useEffect(() => {
         if (!postDataList) return;
 
         setPostList(postDataList.data);

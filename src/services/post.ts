@@ -33,18 +33,9 @@ export type GetPostCommentsResponse = {
     createdAt: string;
 };
 
-export const getAuthToken = () => {
-    let authToken: string | null = "";
-    if (typeof window !== "undefined") {
-        authToken = localStorage.getItem("authToken");
-    }
-    return authToken;
-};
-
-export const setAuthToken = (token: string) => {
-    if (typeof window !== "undefined") {
-        localStorage.setItem("authToken", token);
-    }
+export type CreateCommentParams = {
+    postId: string;
+    message: string;
 };
 
 export const postService = createApi({
@@ -83,6 +74,7 @@ export const postService = createApi({
                 method: "GET",
             }),
             transformResponse: (response: ServiceResponse<GetPostsResponse>) => response.data,
+            providesTags: (result, error, id) => [{ type: "POSTS", id }],
         }),
         getPostComments: builder.query<
             ServiceResponseWithMeta<GetPostCommentsResponse[]>,
@@ -102,8 +94,18 @@ export const postService = createApi({
                 data: response.data,
                 meta: response.meta,
             }),
+            providesTags: (result, error, { id }) => [{ type: "POSTS", id }],
+        }),
+        createComment: builder.mutation<ServiceResponse<GetPostCommentsResponse>, CreateCommentParams>({
+            query: ({ postId, message }) => ({
+                url: `/posts/${postId}/comment`,
+                method: "POST",
+                body: { message },
+            }),
+            invalidatesTags: (result, error, { postId }) => [{ type: "POSTS", id: postId }],
         }),
     }),
 });
 
-export const { useGetAllPostsQuery, useGetPostByIdQuery, useGetPostCommentsQuery } = postService;
+export const { useGetAllPostsQuery, useGetPostByIdQuery, useGetPostCommentsQuery, useCreateCommentMutation } =
+    postService;

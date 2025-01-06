@@ -78,7 +78,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
                         <Link href="/login">
                             <Button
                                 variant="contained"
-                                className="bg-[#6B9B7C] hover:bg-[#5a8369] text-white normal-case"
+                                className="bg-[#49A569] hover:bg-primary-200 text-white normal-case rounded-lg"
                             >
                                 Sign In
                             </Button>
