@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { Box, Typography, Button, Menu, MenuItem, Snackbar, useMediaQuery, useTheme } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -9,6 +10,7 @@ import { useLogoutMutation } from "@/services/auth";
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
     const { user, isLoggedIn } = useCurrentUser();
+    const router = useRouter();
     const [responseError, setResponseError] = useState<string | null>(null);
     const [logout] = useLogoutMutation();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -120,11 +122,16 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
                         </span>
                     )}
                     {MAIN_MENU.map(item => {
-                        const { slug, title, url, icon } = item;
+                        const { slug, title, url, icon, isAuth } = item;
+
+                        if (isAuth && !isLoggedIn) return null;
+
                         return (
                             <Link key={slug} href={url} className="flex items-center gap-3  hover:text-gray-900">
                                 {icon && <span className="material-symbols-outlined text-2xl">{icon as string}</span>}
-                                <Typography className="text-base">{title}</Typography>
+                                <Typography className={`text-base ${router.pathname === url ? "font-bold" : ""}`}>
+                                    {title}
+                                </Typography>
                             </Link>
                         );
                     })}

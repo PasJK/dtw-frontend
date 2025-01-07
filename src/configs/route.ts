@@ -18,7 +18,7 @@ export const MAIN_MENU: RouteProps[] = [
         url: "/blog",
         title: "Home",
         layout: "home",
-        isAuth: true,
+        isAuth: false,
         icon: "home",
     },
     {

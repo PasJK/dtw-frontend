@@ -10,10 +10,14 @@ type BlogPostProps = {
     contents: string;
     totalComments: number;
     isFirst?: boolean;
+    isLast?: boolean;
     onClick?: () => void;
     searchValue?: string;
     fullContent?: boolean;
     createdAt?: string;
+    handleEdit?: () => void;
+    handleDelete?: () => void;
+    canEdit?: boolean;
 };
 
 export const BlogPost = ({
@@ -23,10 +27,14 @@ export const BlogPost = ({
     contents,
     totalComments,
     isFirst,
+    isLast,
     onClick,
     searchValue,
     fullContent,
     createdAt,
+    handleEdit,
+    handleDelete,
+    canEdit = false,
 }: BlogPostProps): React.JSX.Element => {
     const highlightTitle = () => {
         if (!searchValue) return title;
@@ -46,7 +54,7 @@ export const BlogPost = ({
         <div
             className={`w-10/12 sm:w-full xs:w-full border-0 first:rounded-t-xl border-[#BBC2C0] ${fullContent ? "px-1" : "p-4"} bg-white mb-0.5 ${
                 isFirst ? "rounded-t-xl" : ""
-            }`}
+            } ${isLast ? "rounded-b-xl" : ""}`}
         >
             <div className="flex items-center gap-3 mb-3">
                 <AvatarName name={author || ""} showStatus={fullContent} />
@@ -56,6 +64,26 @@ export const BlogPost = ({
                         <TimeAgo date={createdAt} />
                     </span>
                 )}
+                <div className="ml-auto flex gap-2">
+                    {canEdit && (
+                        <>
+                            <span
+                                className="text-xs text-[#939494] cursor-pointer hover:text-gold"
+                                onClick={handleEdit}
+                                onKeyDown={handleEdit}
+                            >
+                                <span className="material-symbols-outlined">edit</span>
+                            </span>
+                            <span
+                                className="text-xs text-[#939494] cursor-pointer hover:text-gold"
+                                onClick={handleDelete}
+                                onKeyDown={handleDelete}
+                            >
+                                <span className="material-symbols-outlined">delete</span>
+                            </span>
+                        </>
+                    )}
+                </div>
             </div>
             <Chip label={community} className="mb-2" />
             <span
