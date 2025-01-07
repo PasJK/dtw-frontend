@@ -13,24 +13,33 @@ export default function Login() {
     const [responseError, setResponseError] = useState<string>("");
 
     const handleUsernameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setResponseError("");
         setUsername(event.target.value);
     };
 
-    const validateLogin = (usernameInput: string) => {
+    const validateLogin = (usernameInput: string): boolean => {
         if (usernameInput.length < 3) {
             setResponseError("Username must be at least 3 characters.");
-            return;
+            return false;
         }
 
         if (!Validator.username(usernameInput)) {
             setResponseError("Username must be only English and number.");
+            return false;
         }
+
+        if (usernameInput.length > 20) {
+            setResponseError("Username must be less than 20 characters.");
+            return false;
+        }
+
+        return true;
     };
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setResponseError("");
-        validateLogin(username);
+        if (!validateLogin(username)) return;
 
         try {
             await login({ username }).unwrap();

@@ -2,14 +2,15 @@ import { PersistGate } from "redux-persist/integration/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { useEffect } from "react";
-import { Provider } from "react-redux";
+import { Provider, useSelector } from "react-redux";
 import { ThemeProvider } from "@mui/material/styles";
 import App, { AppContext, AppInitialProps, AppProps } from "next/app";
 import THEME from "@/styles/MUITheme";
-import { persistor, store } from "@/configs/apiStore";
+import { persistor, RootState, store } from "@/configs/apiStore";
 import { RouteProps, COMBINED_ROUTES } from "@/configs/route";
 import "../styles/globals.css";
 import HomeLayout from "@/layouts/home";
+import { SessionExpiredModal } from "@/components/SessionExpiredModal";
 
 const AppLayout = ({
     pageObj,
@@ -20,8 +21,15 @@ const AppLayout = ({
     mainClass: string;
     component: React.JSX.Element;
 }) => {
+    const sessionExpired = useSelector((state: RootState) => state.auth.sessionExpired);
+
     return (
-        <div className={mainClass}>{pageObj?.layout === "home" ? <HomeLayout>{component}</HomeLayout> : component}</div>
+        <>
+            <SessionExpiredModal isExpired={sessionExpired} />
+            <div className={mainClass}>
+                {pageObj?.layout === "home" ? <HomeLayout>{component}</HomeLayout> : component}
+            </div>
+        </>
     );
 };
 
