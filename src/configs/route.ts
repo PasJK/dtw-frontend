@@ -16,19 +16,19 @@ export const MAIN_MENU: RouteProps[] = [
         key: "blog",
         slug: "blog",
         url: "/blog",
-        title: "Blog",
+        title: "Home",
         layout: "home",
-        isAuth: true,
+        isAuth: false,
         icon: "home",
     },
     {
-        key: "Our Blog",
+        key: "our-blog",
         slug: "our-blog",
         url: "/our-blog",
         title: "Our Blog",
         layout: "home",
         isAuth: true,
-        icon: "storage",
+        icon: "edit_square",
     },
 ];
 
