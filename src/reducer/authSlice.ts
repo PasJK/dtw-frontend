@@ -35,7 +35,7 @@ const authSlice = createSlice({
             state.user = jwtDecode(payload);
             state.isLoggedIn = true;
         });
-    
+
         builder.addMatcher(authService.endpoints.logout.matchFulfilled, state => {
             state.user = null;
             state.isLoggedIn = false;

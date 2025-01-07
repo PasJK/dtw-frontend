@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, IconButton, TextField, MenuItem } from "@mui/material";
-import { useGetCommunityListQuery } from "@/services/post";
+import { useGetCommunityListQuery, useGetPostByIdQuery } from "@/services/post";
 
 export interface PostsFormInput {
     community: string;
@@ -15,6 +15,7 @@ export interface ValidatePostsForm {
 }
 
 interface PostsFormProps {
+    mode?: "create" | "edit";
     handleCancelPost: () => void;
     handleSubmitPost: () => void;
     inputError: ValidatePostsForm;
@@ -22,9 +23,11 @@ interface PostsFormProps {
     onTitleChange: (title: string) => void;
     onContentsChange: (contents: string) => void;
     isMobile?: boolean;
+    postId?: string | null;
 }
 
 export default function PostsForm({
+    mode,
     handleCancelPost,
     handleSubmitPost,
     inputError,
@@ -32,11 +35,26 @@ export default function PostsForm({
     onTitleChange,
     onContentsChange,
     isMobile,
+    postId,
 }: PostsFormProps) {
+    const { data: postData } = useGetPostByIdQuery(postId as string, {
+        skip: mode !== "edit" || !postId,
+    });
     const { data: communityList } = useGetCommunityListQuery();
     const [selectedCommunity, setSelectedCommunity] = useState("");
     const [title, setTitle] = useState<string>("");
     const [contents, setContents] = useState<string>("");
+
+    useEffect(() => {
+        if (mode !== "edit" || !postData) return;
+
+        setSelectedCommunity(postData?.community ?? "");
+        setTitle(postData?.title ?? "");
+        setContents(postData?.contents ?? "");
+    }, [mode, postData]);
+
+    const disabledUpdate =
+        postData?.community === selectedCommunity && postData?.title === title && postData?.contents === contents;
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
@@ -45,7 +63,7 @@ export default function PostsForm({
                     ×
                 </IconButton>
                 <div className="flex justify-between items-start mb-4 md:mb-6">
-                    <h3 className="text-xl font-medium">Create Post</h3>
+                    <h3 className="text-xl font-medium">{mode === "create" ? "Create Post" : "Edit Post"}</h3>
                 </div>
 
                 <TextField
@@ -145,8 +163,9 @@ export default function PostsForm({
                         onClick={handleSubmitPost}
                         className={`${isMobile ? "w-full" : "w-1/3 md:w-1/6"} rounded-lg text-white`}
                         color="success"
+                        disabled={mode === "edit" && disabledUpdate}
                     >
-                        Post
+                        {mode === "edit" ? "Confirm" : "Post"}
                     </Button>
                 </div>
             </div>

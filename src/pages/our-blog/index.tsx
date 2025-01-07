@@ -17,15 +17,17 @@ import {
     GetAllPostsParams,
     GetPostsResponse,
     useCreatePostMutation,
-    useGetAllPostsQuery,
+    useDeletePostMutation,
+    useGetAllOurPostsQuery,
     useGetCommunityListQuery,
+    useUpdatePostMutation,
 } from "@/services/post";
 import { BlogDetail } from "@/components/blogs/BlogDetail";
 import PostsForm, { PostsFormInput, ValidatePostsForm } from "@/components/PostsForm";
 import { getErrorMessage } from "@/utils/commonBaseQuery";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import LoginRequired from "@/components/LoginRequired";
 import { BlogPost } from "@/components/blogs/BlogPost";
+import ConfirmDelete from "@/components/ConfirmDelete";
 
 const defaultCondition: GetAllPostsParams = {
     page: 1,
@@ -34,25 +36,32 @@ const defaultCondition: GetAllPostsParams = {
     order: "desc",
     search: "",
     community: "",
+    ourPost: true,
 };
 
 type ViewState = "list" | "detail";
+type ModalState = null | "create" | "edit" | "delete";
 
-export default function BlogPage() {
+export default function OurBlogPage() {
     const router = useRouter();
     const { isLoggedIn } = useCurrentUser();
     const [condition, setCondition] = useState<GetAllPostsParams>(defaultCondition);
-    const { data: postDataList } = useGetAllPostsQuery(condition);
+    const { data: postDataList, error: postDataError } = useGetAllOurPostsQuery(condition, {
+        refetchOnMountOrArgChange: true,
+        refetchOnReconnect: true,
+    });
     const meta = postDataList?.meta;
+    const [createPost] = useCreatePostMutation();
+    const [updatePost] = useUpdatePostMutation();
+    const [deletePost] = useDeletePostMutation();
     const [isSearchExpanded, setIsSearchExpanded] = useState<boolean>(false);
     const [postList, setPostList] = useState<GetPostsResponse[]>([]);
     const { data: communityList } = useGetCommunityListQuery();
-    const [createPost] = useCreatePostMutation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const [viewState, setViewState] = useState<ViewState>("list");
-    const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState<boolean>(false);
-    const [openAddCommentDialog, setOpenAddCommentDialog] = useState<boolean>(false);
+    const [modalState, setModalState] = useState<ModalState>(null);
+
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [formInput, setFormInput] = useState<PostsFormInput>({
         community: "",
@@ -91,15 +100,6 @@ export default function BlogPage() {
         }
     };
 
-    const handleCreatePostModal = () => {
-        if (!isLoggedIn) {
-            setOpenAddCommentDialog(true);
-            return;
-        }
-
-        setIsCreatePostModalOpen(true);
-    };
-
     const handlePostClick = (id: string) => {
         setViewState("detail");
         setPostSelectedId(id);
@@ -123,7 +123,7 @@ export default function BlogPage() {
         if (!hasErrors) {
             try {
                 await createPost(formInput).unwrap();
-                setIsCreatePostModalOpen(false);
+                setModalState(null);
                 setFormInput({
                     community: "",
                     title: "",
@@ -135,15 +135,71 @@ export default function BlogPage() {
         }
     };
 
-    const handleGoToLogin = () => {
-        router.push("/login");
+    const handleUpdatePost = async () => {
+        if (!postSelectedId) return;
+
+        const errors = validateInput(formInput);
+        const hasErrors = Object.values(errors).some(error => error);
+
+        if (!hasErrors) {
+            try {
+                await updatePost({ id: postSelectedId, ...formInput }).unwrap();
+                setModalState(null);
+            } catch (error) {
+                setErrorMessage(getErrorMessage(error));
+            }
+        }
     };
+
+    const handleDeletePost = async () => {
+        if (!postSelectedId) return;
+
+        try {
+            await deletePost(postSelectedId).unwrap();
+            setModalState(null);
+        } catch (error) {
+            setErrorMessage(getErrorMessage(error));
+        }
+    };
+
+    const handleOpenEditModal = (id: string) => {
+        setPostSelectedId(id);
+        setModalState("edit");
+    };
+
+    const handleOpenDeleteModal = (id: string) => {
+        setPostSelectedId(id);
+        setModalState("delete");
+    };
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            router.push("/blog");
+        }
+    }, [isLoggedIn]);
+
+    useEffect(() => {
+        if (postDataError) {
+            setErrorMessage(getErrorMessage(postDataError));
+        }
+    }, [postDataError]);
 
     useEffect(() => {
         if (!postDataList) return;
 
         setPostList(postDataList.data);
     }, [postDataList]);
+
+    useEffect(() => {
+        if (modalState === "edit") {
+            setFormInput({
+                ...formInput,
+                community: postDataList?.data.find(post => post.id === postSelectedId)?.community ?? "",
+                title: postDataList?.data.find(post => post.id === postSelectedId)?.title ?? "",
+                contents: postDataList?.data.find(post => post.id === postSelectedId)?.contents ?? "",
+            });
+        }
+    }, [modalState, postDataList]);
 
     return (
         <div className={` sm:w-full mx-auto ${viewState === "detail" ? "h-screen w-full" : "w-11/12 p-4"}`}>
@@ -207,7 +263,7 @@ export default function BlogPage() {
                             <Button
                                 variant="contained"
                                 className="bg-[#49A569] hover:bg-[#3d8a57] text-white normal-case flex items-center gap-2 whitespace-nowrap"
-                                onClick={handleCreatePostModal}
+                                onClick={() => setModalState("create")}
                             >
                                 <span>Create</span>
                                 <span className="text-xs">+</span>
@@ -227,6 +283,9 @@ export default function BlogPage() {
                                 isLast={index === postList.length - 1}
                                 searchValue={condition.search || ""}
                                 onClick={() => handlePostClick(post.id)}
+                                handleEdit={() => handleOpenEditModal(post.id)}
+                                handleDelete={() => handleOpenDeleteModal(post.id)}
+                                canEdit
                             />
                         ))
                     ) : (
@@ -239,26 +298,35 @@ export default function BlogPage() {
                 postSelectedId && <BlogDetail postId={postSelectedId} handleBack={() => setViewState("list")} />
             )}
 
-            <Modal
-                open={openAddCommentDialog}
-                onClose={() => setOpenAddCommentDialog(false)}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <LoginRequired handleGoToLogin={handleGoToLogin} handleClose={() => setOpenAddCommentDialog(false)} />
-            </Modal>
+            {modalState && ["create", "edit"].includes(modalState) && (
+                <Modal open={!!modalState} onClose={() => setModalState(null)}>
+                    <PostsForm
+                        mode={modalState === "edit" ? "edit" : "create"}
+                        handleCancelPost={() => setModalState(null)}
+                        handleSubmitPost={modalState === "edit" ? handleUpdatePost : handleCreatePost}
+                        onSelectCommunity={community => setFormInput({ ...formInput, community })}
+                        onTitleChange={inputTitle => setFormInput({ ...formInput, title: inputTitle })}
+                        onContentsChange={inputContents => setFormInput({ ...formInput, contents: inputContents })}
+                        inputError={inputError}
+                        isMobile={isMobile}
+                        postId={modalState === "edit" ? postSelectedId : null}
+                    />
+                </Modal>
+            )}
 
-            <Modal open={isCreatePostModalOpen} onClose={() => setIsCreatePostModalOpen(false)}>
-                <PostsForm
-                    handleCancelPost={() => setIsCreatePostModalOpen(false)}
-                    handleSubmitPost={handleCreatePost}
-                    onSelectCommunity={community => setFormInput({ ...formInput, community })}
-                    onTitleChange={inputTitle => setFormInput({ ...formInput, title: inputTitle })}
-                    onContentsChange={inputContents => setFormInput({ ...formInput, contents: inputContents })}
-                    inputError={inputError}
-                    isMobile={isMobile}
-                />
-            </Modal>
+            {modalState === "delete" && (
+                <Modal open={!!modalState} onClose={() => setModalState(null)}>
+                    <ConfirmDelete
+                        textLine1="Please confirm if you wish to"
+                        textLine2="delete this post"
+                        textLine3="Are you sure you want to delete this post?"
+                        textLine4="Once deleted, it cannot be recovered."
+                        handleCancel={() => setModalState(null)}
+                        handleConfirm={handleDeletePost}
+                        isMobile={isMobile}
+                    />
+                </Modal>
+            )}
 
             {viewState === "list" && (
                 <div className="fixed bottom-0 left-0 right-0 bg-white">
