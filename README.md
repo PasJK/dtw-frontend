@@ -36,6 +36,14 @@ yarn dev หรือ yarn start
 npm run dev หรือ npm run start
 ```
 
+```bash
+# เข้าสู่ระบบ
+http://localhost:3000/
+```
+
+
+
+
 
 ## โครงสร้างของ project จะอยู่ที่ `src`
 โครงสร้างส่วนใหญ่ของ project จะใช้งาน MUI ร่วมกับ TailwindCSS เพื่อ Custom UI บางส่วน
